@@ -165,9 +165,9 @@ attrib_info = """
 @st.cache_resource()#allow_output_mutation=True)
 
 
+@st.cache_resource()#allow_output_mutation=True)
 def load_model(model_file):
-    h5_file = h5py.File('model.h5', 'r')
-    model = tf.keras.models.load_model(h5_file)
+    model = tf.keras.models.load_model('model.h5')
     return model
 
 def ann_app():
