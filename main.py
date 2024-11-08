@@ -48,8 +48,7 @@ print(model.summary())
 
 
 es = tf.keras.callbacks.EarlyStopping(monitor='val_accuracy', min_delta=1e-3, patience=10, mode='max', verbose=0)
-mc = tf.keras.callbacks.ModelCheckpoint(filepath='model.h5', save_best_only=True, save_weights_only=True)
-
+mc = tf.keras.callbacks.ModelCheckpoint(filepath='model.weights.h5', monitor='val_accuracy', save_best_only=True, save_weights_only=True)
 
 hist = model.fit(X_train_scaled, y_train, validation_data=(X_test_scaled, y_test), 
                  epochs=100, batch_size=32, callbacks=[es, mc], verbose=1)
