@@ -171,138 +171,237 @@ def load_model(model_file):
     return model
 
 def ann_app():
-    st.subheader("ANN Model Section")
+    # Add custom CSS for better styling
+    st.markdown("""
+        <style>
+        .main-header {
+            font-size: 30px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 30px;
+            color: #1E88E5;
+        }
+        .stExpander {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .metric-header {
+            color: #1E88E5;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .prediction-box {
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #f0f8ff;
+            margin: 20px 0;
+            text-align: center;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+    # Main header
+    st.markdown('<p class="main-header">Heart Disease Prediction Model</p>', unsafe_allow_html=True)
+    
+    # Load model
     loaded_model = load_model('model.h5')
     
-    col1,col2=st.columns(2)
+    # Create tabs for input and analysis
+    tab1, tab2 = st.tabs(["📝 Input Parameters", "📊 Model Analysis"])
     
-    with col1:
-        AGE = st.number_input("AGE", step=1)
-        RESTING_BP = st.number_input("RESTING BP", step=1)
-        SERUM_CHOLESTROL = st.number_input("SERUM CHOLESTROL", step=1)
-        TRI_GLYCERIDE = st.number_input("TRI GLYCERIDE", step=1)
-        LDL = st.number_input("LDL", step=1)
-        HDL = st.number_input("HDL", step=1)
-        FBS = st.number_input("FBS", step=1)
+    with tab1:
+        # Create two columns with better spacing
+        col1, col2 = st.columns(2, gap="large")
+        
+        with col1:
+            st.markdown("### Patient Metrics")
+            AGE = st.number_input("Age", min_value=0, max_value=120, step=1, 
+                                help="Enter patient's age")
+            RESTING_BP = st.number_input("Resting Blood Pressure", min_value=0, max_value=300, step=1,
+                                       help="Enter resting blood pressure in mm Hg")
+            SERUM_CHOLESTROL = st.number_input("Serum Cholesterol", min_value=0, max_value=1000, step=1,
+                                             help="Enter serum cholesterol level in mg/dl")
+            TRI_GLYCERIDE = st.number_input("Triglycerides", min_value=0, max_value=1000, step=1,
+                                          help="Enter triglyceride level in mg/dl")
+            LDL = st.number_input("LDL", min_value=0, max_value=300, step=1,
+                                help="Enter LDL cholesterol level in mg/dl")
+            HDL = st.number_input("HDL", min_value=0, max_value=100, step=1,
+                                help="Enter HDL cholesterol level in mg/dl")
+            FBS = st.number_input("Fasting Blood Sugar", min_value=0, max_value=500, step=1,
+                                help="Enter fasting blood sugar level in mg/dl")
            
-    with col2:
-        GENDER = st.selectbox('GENDER', [0, 1])
-        CHEST_PAIN = st.selectbox('CHEST PAIN', [0, 1])
-        RESTING_ECG = st.selectbox('ESTING ECG', [0, 1])
-        TMT = st.selectbox('TMT', [0, 1])
-        ECHO = st.number_input("ECHO", step=1)
-        MAX_HEART_RATE = st.number_input("MAX HEART RATE", step=1)
+        with col2:
+            st.markdown("### Clinical Parameters")
+            GENDER = st.selectbox('Gender', 
+                                options=[0, 1], 
+                                format_func=lambda x: "Female" if x == 0 else "Male",
+                                help="Select patient's gender")
+            
+            CHEST_PAIN = st.selectbox('Chest Pain', 
+                                    options=[0, 1],
+                                    format_func=lambda x: "No" if x == 0 else "Yes",
+                                    help="Presence of chest pain")
+            
+            RESTING_ECG = st.selectbox('Resting ECG', 
+                                     options=[0, 1],
+                                     format_func=lambda x: "Normal" if x == 0 else "Abnormal",
+                                     help="Resting electrocardiographic results")
+            
+            TMT = st.selectbox('TMT (Treadmill Test)', 
+                             options=[0, 1],
+                             format_func=lambda x: "Normal" if x == 0 else "Abnormal",
+                             help="Treadmill test results")
+            
+            ECHO = st.number_input("Echo", min_value=0, max_value=100, step=1,
+                                 help="Echocardiogram value")
+            
+            MAX_HEART_RATE = st.number_input("Maximum Heart Rate", 
+                                           min_value=0, max_value=250, step=1,
+                                           help="Maximum heart rate achieved")
         
-        encoded_results = [AGE, GENDER, CHEST_PAIN, RESTING_BP, SERUM_CHOLESTROL, TRI_GLYCERIDE, LDL, HDL, FBS, RESTING_ECG, MAX_HEART_RATE, ECHO, TMT]
+        # Collect all inputs
+        encoded_results = [AGE, GENDER, CHEST_PAIN, RESTING_BP, SERUM_CHOLESTROL, 
+                         TRI_GLYCERIDE, LDL, HDL, FBS, RESTING_ECG, MAX_HEART_RATE, 
+                         ECHO, TMT]
+        
+        # Add a predict button
+        if st.button('Predict', type='primary', use_container_width=True):
+            # Show a spinner while predicting
+            with st.spinner('Analyzing...'):
+                sample = np.array(encoded_results).reshape(1, -1)
+                prediction = loaded_model.predict(sample)
+                rounded_prediction = np.around(prediction[0], decimals=2)
+            
+            # Display prediction in a nice box
+            st.markdown(
+                f"""
+                <div class="prediction-box">
+                    <h2>Prediction Result</h2>
+                    <h1 style="font-size: 48px; color: #1E88E5;">{rounded_prediction[0]:.2%}</h1>
+                    <p>Probability of Heart Disease</p>
+                </div>
+                """, 
+                unsafe_allow_html=True
+            )
     
-    with st.expander('Predicted'):
-        sample = np.array(encoded_results).reshape(1, -1)
-        prediction = loaded_model.predict(sample)
-        rounded_prediction = np.around(prediction[0], decimals=2)  # Round the value to 2 decimal places
-        st.success(rounded_prediction[0])
+    with tab2:
+        st.markdown("""
+        ### Model Evaluation Metrics
         
-    st.write("""
-             **Now, let's delve deeper into the intricacies of the evaluation metrics employed to gauge the remarkable performance exhibited by the model in question.**
-             
-1. ROC-AUC Curve: The Receiver Operating Characteristic (ROC) curve plots the true positive rate against the false positive rate at various classification thresholds. The Area Under the Curve (AUC) quantifies the classifier's ability to distinguish between positive and negative instances. A higher AUC indicates better discrimination, implying that the model can effectively differentiate between individuals with heart disease and those without.
-
-2. Model Loss Curve: The model loss curve illustrates the training and validation loss over the course of training epochs. The loss function measures the discrepancy between the predicted and actual values. Monitoring the loss curve helps assess the model's convergence and whether it's overfitting or underfitting the data. Ideally, we aim for the training and validation loss to decrease steadily until convergence.
-
-3. Model Accuracy Curve: The model accuracy curve tracks the training and validation accuracy as the model learns from the data. Accuracy represents the proportion of correctly classified instances out of the total. By observing the accuracy curve, we can determine if the model is progressively improving or if there are signs of overfitting or underfitting.
-
-4. Precision-Recall Plot: The Precision-Recall plot showcases the trade-off between precision and recall at various classification thresholds. Precision measures the proportion of true positive predictions out of all positive predictions, while recall calculates the proportion of true positive predictions out of all actual positive instances. The plot helps evaluate the model
-
-5. Confusion Matrix summarizes the model's classification results, depicting true positives, true negatives, false positives, and false negatives, offering a comprehensive view of the model's performance across different classes. Collectively, these evaluation matrices aid in understanding and fine-tuning the ANN model for heart disease prediction.
-""")
-
-
-    def plot():
-     
-     with st.expander('ROC-AUC Curve'):
-        st.subheader("ROC-AUC Curve")
-        from sklearn.metrics import roc_auc_score, roc_curve
-
-        logit_roc_auc = roc_auc_score(y_test, y_pred_proba)
-        fpr, tpr, thresholds = roc_curve(y_test, y_pred_class)
-
-        fig1=plt.figure(figsize=(10, 5))
-        plt.plot(fpr, tpr, label='(area = %0.2f)' % logit_roc_auc)
-        plt.plot([0, 1], [0, 1],'r--')
-        plt.xlim([0.0, 1.0])
-        plt.ylim([0.0, 1.05])
-        plt.xlabel('False Positive Rate')
-        plt.ylabel('True Positive Rate')
-        plt.title('Receiver Operating Characteristic')
-        plt.legend(loc="lower right")
-        plt.show()
-        st.pyplot(fig1)
+        Explore the various metrics used to evaluate the model's performance:
+        """)
         
-     with st.expander('Model Loss Curve'):
-        st.subheader("Model Loss Curve")
-        fig2=plt.figure(figsize=(10, 5))
-        plt.plot(hist.history['loss'], label='train')
-        plt.plot(hist.history['val_loss'], label='test')
-        plt.title('Model Loss')
-        plt.xlabel('Epochs')
-        plt.ylabel('Loss')
-        plt.legend(loc='upper right')
-        plt.grid(True)
-        plt.show()
-        st.pyplot(fig2)
+        metrics = st.radio(
+            "Select Metric to View:",
+            ["ROC-AUC Curve", "Model Loss", "Model Accuracy", "Precision-Recall", "Confusion Matrix"],
+            horizontal=True
+        )
         
-     with st.expander('Model Accuracy Curve'):
-        st.subheader("Model Accuracy Curve")
-        fig3=plt.figure(figsize=(10, 5))
-        plt.plot(hist.history['accuracy'], label='train')
-        plt.plot(hist.history['val_accuracy'], label='test')
-        plt.title('Model Accuracy')
-        plt.xlabel('Epochs')
-        plt.ylabel('Accuracy')
-        plt.legend(loc='lower right')
-        plt.grid(True)
-        plt.show()
-        st.pyplot(fig3)
-        
-     with st.expander('Precision-Recall Plot'):
-        st.subheader("Precision-Recall Plot")
-       
-        precisions, recalls, thresholds = precision_recall_curve(y_test, y_pred_proba)
+        # Create expandable sections for each plot
+        if metrics == "ROC-AUC Curve":
+            with st.expander("📈 ROC-AUC Curve", expanded=True):
+                st.markdown("#### Receiver Operating Characteristic (ROC) Curve")
+                logit_roc_auc = roc_auc_score(y_test, y_pred_proba)
+                fpr, tpr, thresholds = roc_curve(y_test, y_pred_class)
+                
+                fig = plt.figure(figsize=(10, 6))
+                plt.plot(fpr, tpr, label=f'AUC = {logit_roc_auc:.2f}')
+                plt.plot([0, 1], [0, 1], 'r--')
+                plt.xlim([0.0, 1.0])
+                plt.ylim([0.0, 1.05])
+                plt.xlabel('False Positive Rate')
+                plt.ylabel('True Positive Rate')
+                plt.title('Receiver Operating Characteristic')
+                plt.legend(loc="lower right")
+                plt.grid(True)
+                st.pyplot(fig)
+                
+        elif metrics == "Model Loss":
+            with st.expander("📉 Model Loss Curve", expanded=True):
+                st.markdown("#### Training and Validation Loss")
+                fig = plt.figure(figsize=(10, 6))
+                plt.plot(hist.history['loss'], label='Training Loss')
+                plt.plot(hist.history['val_loss'], label='Validation Loss')
+                plt.title('Model Loss Over Time')
+                plt.xlabel('Epochs')
+                plt.ylabel('Loss')
+                plt.legend(loc='upper right')
+                plt.grid(True)
+                st.pyplot(fig)
+                
+        elif metrics == "Model Accuracy":
+            with st.expander("📊 Model Accuracy Curve", expanded=True):
+                st.markdown("#### Training and Validation Accuracy")
+                fig = plt.figure(figsize=(10, 6))
+                plt.plot(hist.history['accuracy'], label='Training Accuracy')
+                plt.plot(hist.history['val_accuracy'], label='Validation Accuracy')
+                plt.title('Model Accuracy Over Time')
+                plt.xlabel('Epochs')
+                plt.ylabel('Accuracy')
+                plt.legend(loc='lower right')
+                plt.grid(True)
+                st.pyplot(fig)
+                
+        elif metrics == "Precision-Recall":
+            with st.expander("📊 Precision-Recall Plot", expanded=True):
+                st.markdown("#### Precision-Recall Trade-off")
+                precisions, recalls, thresholds = precision_recall_curve(y_test, y_pred_proba)
+                
+                threshold_boundary = min(len(thresholds), len(precisions), len(recalls))
+                thresholds = thresholds[:threshold_boundary]
+                precisions = precisions[:threshold_boundary]
+                recalls = recalls[:threshold_boundary]
+                
+                fig = plt.figure(figsize=(10, 6))
+                plt.plot(thresholds, precisions[:-1], label='Precision', linewidth=2)
+                plt.plot(thresholds, recalls[:-1], label='Recall', linewidth=2)
+                plt.xlabel('Threshold Value')
+                plt.ylabel('Score')
+                plt.title('Precision and Recall Scores vs Threshold')
+                plt.legend()
+                plt.grid(True)
+                st.pyplot(fig)
+                
+        else:  # Confusion Matrix
+            with st.expander("🔢 Confusion Matrix", expanded=True):
+                st.markdown("#### Model Confusion Matrix")
+                cm = confusion_matrix(y_test, y_pred_class)
+                fig = plt.figure(figsize=(8, 6))
+                sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+                plt.title('Confusion Matrix')
+                plt.xlabel('Predicted Label')
+                plt.ylabel('True Label')
+                st.pyplot(fig)
 
-        threshold_boundary = thresholds.shape[0]
-        threshold_boundary = min(len(thresholds), len(precisions), len(recalls))
-        thresholds = thresholds[:threshold_boundary]
-        precisions = precisions[:threshold_boundary]
-        recalls = recalls[:threshold_boundary]
-
-        # plot precision
-        fig4 = plt.figure(figsize=(10, 5))
-        plt.plot(thresholds, precisions, label='Precision')
-    
-        # plot recall
-        plt.plot(thresholds, recalls, label='Recall')
-        
-        start, end = plt.xlim()
-        plt.xticks(np.round(np.arange(start, end, 0.1), 2))
-        plt.xlabel('Threshold Value')
-        plt.ylabel('Precision and Recall Value')
-        plt.legend()
-        plt.grid()
-        
-        # Display the plot in Streamlit
-        st.pyplot(fig4)
-    
-        
-     with st.expander('Confusion Matrix'):
-        st.subheader("Confusion Matrix")
-        from sklearn.metrics import confusion_matrix
-        cm = confusion_matrix(y_test, y_pred_class)
-        fig5 = plt.figure(figsize = (10, 5))
-        sns.heatmap(cm, annot=True, fmt='d', cbar=False, cmap='Blues')
-        plt.title('Confusion Matrix')
-        plt.xlabel('Predicted label')
-        plt.ylabel('Actual label')
-        plt.show()
-        st.pyplot(fig5)
-        
-    plot()
-        
+        # Add explanation of metrics
+        with st.expander("📚 Understanding the Metrics"):
+            st.markdown("""
+            #### Detailed Explanation of Evaluation Metrics
+            
+            1. **ROC-AUC Curve**
+            - Plots true positive rate vs false positive rate
+            - Higher AUC indicates better model discrimination
+            - Perfect classifier would have AUC = 1.0
+            
+            2. **Model Loss Curve**
+            - Shows how well the model is learning over time
+            - Decreasing loss indicates improving model performance
+            - Gap between training and validation loss helps identify overfitting
+            
+            3. **Model Accuracy Curve**
+            - Tracks prediction accuracy during training
+            - Higher accuracy indicates better model performance
+            - Helps monitor potential overfitting
+            
+            4. **Precision-Recall Plot**
+            - Shows trade-off between precision and recall
+            - Helps in choosing optimal threshold for classification
+            - Important for imbalanced datasets
+            
+            5. **Confusion Matrix**
+            - Shows true positives, false positives, true negatives, and false negatives
+            - Helps understand model's classification performance
+            - Useful for identifying specific types of errors
+            """)
