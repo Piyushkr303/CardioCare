@@ -345,24 +345,29 @@ def ann_app():
                 st.pyplot(fig)
                 
         elif metrics == "Precision-Recall":
-            with st.expander("📊 Precision-Recall Plot", expanded=True):
-                st.markdown("#### Precision-Recall Trade-off")
-                precisions, recalls, thresholds = precision_recall_curve(y_test, y_pred_proba)
-                
-                threshold_boundary = min(len(thresholds), len(precisions), len(recalls))
-                thresholds = thresholds[:threshold_boundary]
-                precisions = precisions[:threshold_boundary]
-                recalls = recalls[:threshold_boundary]
-                
-                fig = plt.figure(figsize=(10, 6))
-                plt.plot(thresholds, precisions[:-1], label='Precision', linewidth=2)
-                plt.plot(thresholds, recalls[:-1], label='Recall', linewidth=2)
-                plt.xlabel('Threshold Value')
-                plt.ylabel('Score')
-                plt.title('Precision and Recall Scores vs Threshold')
-                plt.legend()
-                plt.grid(True)
-                st.pyplot(fig)
+          with st.expander('Precision-Recall Plot'):
+            st.subheader("Precision-Recall Plot")
+            try:
+              precisions, recalls, thresholds = precision_recall_curve(y_test, y_pred_proba)
+            
+              # Ensure all arrays have the same length
+              min_length = min(len(thresholds), len(precisions) - 1, len(recalls) - 1)
+              thresholds = thresholds[:min_length]
+              precisions = precisions[:min_length]
+              recalls = recalls[:min_length]
+
+              fig4 = plt.figure(figsize=(10, 5))
+              plt.plot(thresholds, precisions[:min_length], label='Precision')
+              plt.plot(thresholds, recalls[:min_length], label='Recall')
+            
+              plt.xlabel('Threshold Value')
+              plt.ylabel('Precision and Recall Value')
+              plt.legend()
+              plt.grid()
+              st.pyplot(fig4)
+              plt.close(fig4)
+            except Exception as e:
+              st.error(f"Error in precision-recall plotting: {str(e)}")
                 
         else:  # Confusion Matrix
             with st.expander("🔢 Confusion Matrix", expanded=True):
