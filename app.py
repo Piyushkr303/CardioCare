@@ -57,7 +57,7 @@ def main():
     """, unsafe_allow_html=True)
 
     # Main title with enhanced styling
-    st.markdown('<p class="main-title">Heart Disease Prediction using Artificial Neural Networks (ANN)</p>', 
+    st.markdown('<p class="main-title">CardioCare: A Heart Disease Prediction using Artificial Neural Networks (ANN)</p>', 
                 unsafe_allow_html=True)
 
     # Enhanced sidebar
