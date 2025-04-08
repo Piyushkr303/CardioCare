@@ -1,7 +1,7 @@
 import streamlit as st
 from main import ann_app
-from heart-disease-rbm-classifier import rbm_app
-from heart-disease-voting-classifier import voting_clf_app
+from rbm import rbm_app
+from voting import voting_clf_app
 
 
 def main():
