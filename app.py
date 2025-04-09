@@ -1,7 +1,5 @@
 import streamlit as st
 from main import ann_app
-from rbm import rbm_app
-from voting import voting_clf_app
 
 
 def main():
